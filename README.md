@@ -37,12 +37,12 @@ Especially those generously supporting us at the *The Organization* tier and hig
 import pathlib, tomllib
 
 for sponsor in tomllib.loads(pathlib.Path("pyproject.toml").read_text())["tool"]["sponcon"]["sponsors"]:
-      print(f'<a href="{sponsor["url"]}"><img title="{sponsor["title"]}" src="docs/_static/sponsors/{sponsor["img"]}" width="200" height="60" /></a>')
+      print(f'<a href="{sponsor["url"]}"><img title="{sponsor["title"]}" src="docs/_static/sponsors/{sponsor["img"]}" width="190" /></a>')
 ]]] -->
-<a href="https://www.variomedia.de/"><img title="Variomedia AG" src="docs/_static/sponsors/Variomedia.svg" width="200" height="60" /></a>
-<a href="https://tidelift.com/?utm_source=lifter&utm_medium=referral&utm_campaign=hynek"><img title="Tidelift" src="docs/_static/sponsors/Tidelift.svg" width="200" height="60" /></a>
-<a href="https://klaviyo.com/"><img title="Klaviyo" src="docs/_static/sponsors/Klaviyo.svg" width="200" height="60" /></a>
-<a href="https://filepreviews.io/"><img title="FilePreviews" src="docs/_static/sponsors/FilePreviews.svg" width="200" height="60" /></a>
+<a href="https://www.variomedia.de/"><img title="Variomedia AG" src="docs/_static/sponsors/Variomedia.svg" width="190" /></a>
+<a href="https://tidelift.com/?utm_source=lifter&utm_medium=referral&utm_campaign=hynek"><img title="Tidelift" src="docs/_static/sponsors/Tidelift.svg" width="190" /></a>
+<a href="https://klaviyo.com/"><img title="Klaviyo" src="docs/_static/sponsors/Klaviyo.svg" width="190" /></a>
+<a href="https://filepreviews.io/"><img title="FilePreviews" src="docs/_static/sponsors/FilePreviews.svg" width="190" /></a>
 <!-- [[[end]]] -->
 
 </p>
@@ -133,7 +133,7 @@ class SomeClass:
 
 On the tin, *attrs* might remind you of `dataclasses` (and indeed, `dataclasses` [are a descendant](https://hynek.me/articles/import-attrs/) of *attrs*).
 In practice it does a lot more and is more flexible.
-For instance, it allows you to define [special handling of NumPy arrays for equality checks](https://www.attrs.org/en/stable/comparison.html#customization), allows more ways to [plug into the initialization process](https://www.attrs.org/en/stable/init.html#hooking-yourself-into-initialization), and allows for stepping through the generated methods using a debugger.
+For instance, it allows you to define [special handling of NumPy arrays for equality checks](https://www.attrs.org/en/stable/comparison.html#customization), allows more ways to [plug into the initialization process](https://www.attrs.org/en/stable/init.html#hooking-yourself-into-initialization), has a replacement for `__init_subclass__`, and allows for stepping through the generated methods using a debugger.
 
 For more details, please refer to our [comparison page](https://www.attrs.org/en/stable/why.html#data-classes), but generally speaking, we are more likely to commit crimes against nature to make things work that one would expect to work, but that are quite complicated in practice.
 
@@ -155,4 +155,4 @@ Available as part of the Tidelift Subscription.
 
 The maintainers of *attrs* and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source packages you use to build your applications.
 Save time, reduce risk, and improve code health, while paying the maintainers of the exact packages you use.
-[Learn more.](https://tidelift.com/subscription/pkg/pypi-attrs?utm_source=pypi-attrs&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
+[Learn more](https://tidelift.com/?utm_source=lifter&utm_medium=referral&utm_campaign=hynek).

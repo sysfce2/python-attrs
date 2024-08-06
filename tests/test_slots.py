@@ -3,6 +3,7 @@
 """
 Unit tests for slots-related functionality.
 """
+
 import functools
 import pickle
 import weakref
@@ -14,7 +15,7 @@ import pytest
 import attr
 import attrs
 
-from attr._compat import PY_3_8_PLUS, PYPY
+from attr._compat import PY_3_8_PLUS, PY_3_14_PLUS, PYPY
 
 
 # Pympler doesn't work on PyPy.
@@ -50,7 +51,7 @@ class C1:
         return super().__repr__()
 
 
-@attr.s(slots=True, hash=True)
+@attr.s(slots=True, unsafe_hash=True)
 class C1Slots:
     x = attr.ib(validator=attr.validators.instance_of(int))
     y = attr.ib()
@@ -133,7 +134,7 @@ def test_inheritance_from_nonslots():
     the benefits of slotted classes, but it should still work.
     """
 
-    @attr.s(slots=True, hash=True)
+    @attr.s(slots=True, unsafe_hash=True)
     class C2Slots(C1):
         z = attr.ib()
 
@@ -196,7 +197,7 @@ def test_nonslots_these():
         these={"x": attr.ib(), "y": attr.ib(), "z": attr.ib()},
         init=False,
         slots=True,
-        hash=True,
+        unsafe_hash=True,
     )(SimpleOrdinaryClass)
 
     c2 = C2Slots(x=1, y=2, z="test")
@@ -229,11 +230,11 @@ def test_inheritance_from_slots():
     Inheriting from an attrs slotted class works.
     """
 
-    @attr.s(slots=True, hash=True)
+    @attr.s(slots=True, unsafe_hash=True)
     class C2Slots(C1Slots):
         z = attr.ib()
 
-    @attr.s(slots=True, hash=True)
+    @attr.s(slots=True, unsafe_hash=True)
     class C2(C1):
         z = attr.ib()
 
@@ -275,13 +276,13 @@ def test_inheritance_from_slots_with_attribute_override():
     class HasXSlot:
         __slots__ = ("x",)
 
-    @attr.s(slots=True, hash=True)
+    @attr.s(slots=True, unsafe_hash=True)
     class C2Slots(C1Slots):
         # y re-defined here but it shouldn't get a slot
         y = attr.ib()
         z = attr.ib()
 
-    @attr.s(slots=True, hash=True)
+    @attr.s(slots=True, unsafe_hash=True)
     class NonAttrsChild(HasXSlot):
         # Parent class has slot for "x" already, so we skip it
         x = attr.ib()
@@ -337,7 +338,12 @@ def test_bare_inheritance_from_slots():
     """
 
     @attr.s(
-        init=False, eq=False, order=False, hash=False, repr=False, slots=True
+        init=False,
+        eq=False,
+        order=False,
+        unsafe_hash=False,
+        repr=False,
+        slots=True,
     )
     class C1BareSlots:
         x = attr.ib(validator=attr.validators.instance_of(int))
@@ -354,7 +360,7 @@ def test_bare_inheritance_from_slots():
         def staticmethod():
             return "staticmethod"
 
-    @attr.s(init=False, eq=False, order=False, hash=False, repr=False)
+    @attr.s(init=False, eq=False, order=False, unsafe_hash=False, repr=False)
     class C1Bare:
         x = attr.ib(validator=attr.validators.instance_of(int))
         y = attr.ib()
@@ -370,11 +376,11 @@ def test_bare_inheritance_from_slots():
         def staticmethod():
             return "staticmethod"
 
-    @attr.s(slots=True, hash=True)
+    @attr.s(slots=True, unsafe_hash=True)
     class C2Slots(C1BareSlots):
         z = attr.ib()
 
-    @attr.s(slots=True, hash=True)
+    @attr.s(slots=True, unsafe_hash=True)
     class C2(C1Bare):
         z = attr.ib()
 
@@ -769,6 +775,9 @@ def test_slots_cached_property_works_on_frozen_isntances():
 
 
 @pytest.mark.skipif(not PY_3_8_PLUS, reason="cached_property is 3.8+")
+@pytest.mark.xfail(
+    PY_3_14_PLUS, reason="3.14 returns weird annotation for cached_properies"
+)
 def test_slots_cached_property_infers_type():
     """
     Infers type of cached property.

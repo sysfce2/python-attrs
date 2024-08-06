@@ -4,13 +4,113 @@
 Tests for `attr.converters`.
 """
 
+import pickle
 
 import pytest
 
 import attr
 
-from attr import Factory, attrib
+from attr import Converter, Factory, attrib
+from attr._compat import _AnnotationExtractor
 from attr.converters import default_if_none, optional, pipe, to_bool
+
+
+class TestConverter:
+    @pytest.mark.parametrize("takes_self", [True, False])
+    @pytest.mark.parametrize("takes_field", [True, False])
+    def test_pickle(self, takes_self, takes_field):
+        """
+        Wrapped converters can be pickled.
+        """
+        c = Converter(int, takes_self=takes_self, takes_field=takes_field)
+
+        new_c = pickle.loads(pickle.dumps(c))
+
+        assert c == new_c
+        assert takes_self == new_c.takes_self
+        assert takes_field == new_c.takes_field
+        assert c.__call__.__name__ == new_c.__call__.__name__
+
+    @pytest.mark.parametrize(
+        "scenario",
+        [
+            ((False, False), "__attr_converter_le_name(le_value)"),
+            (
+                (True, True),
+                "__attr_converter_le_name(le_value, self, attr_dict['le_name'])",
+            ),
+            (
+                (True, False),
+                "__attr_converter_le_name(le_value, self)",
+            ),
+            (
+                (False, True),
+                "__attr_converter_le_name(le_value, attr_dict['le_name'])",
+            ),
+        ],
+    )
+    def test_fmt_converter_call(self, scenario):
+        """
+        _fmt_converter_call determines the arguments to the wrapped converter
+        according to `takes_self` and `takes_field`.
+        """
+        (takes_self, takes_field), expect = scenario
+
+        c = Converter(None, takes_self=takes_self, takes_field=takes_field)
+
+        assert expect == c._fmt_converter_call("le_name", "le_value")
+
+    def test_works_as_adapter(self):
+        """
+        Converter instances work as adapters and pass the correct arguments to
+        the wrapped converter callable.
+        """
+        taken = None
+        instance = object()
+        field = object()
+
+        def save_args(*args):
+            nonlocal taken
+            taken = args
+            return args[0]
+
+        Converter(save_args)(42, instance, field)
+
+        assert (42,) == taken
+
+        Converter(save_args, takes_self=True)(42, instance, field)
+
+        assert (42, instance) == taken
+
+        Converter(save_args, takes_field=True)(42, instance, field)
+
+        assert (42, field) == taken
+
+        Converter(save_args, takes_self=True, takes_field=True)(
+            42, instance, field
+        )
+
+        assert (42, instance, field) == taken
+
+    def test_annotations_if_last_in_pipe(self):
+        """
+        If the wrapped converter has annotations, they are copied to the
+        Converter __call__.
+        """
+
+        def wrapped(_, __, ___) -> float:
+            pass
+
+        c = Converter(wrapped)
+
+        assert float is c.__call__.__annotations__["return"]
+
+        # Doesn't overwrite globally.
+
+        c2 = Converter(int)
+
+        assert float is c.__call__.__annotations__["return"]
+        assert None is c2.__call__.__annotations__.get("return")
 
 
 class TestOptional:
@@ -105,9 +205,13 @@ class TestPipe:
         """
         Succeeds if all wrapped converters succeed.
         """
-        c = pipe(str, to_bool, bool)
+        c = pipe(str, Converter(to_bool), bool)
 
-        assert True is c("True") is c(True)
+        assert (
+            True
+            is c.converter("True", None, None)
+            is c.converter(True, None, None)
+        )
 
     def test_fail(self):
         """
@@ -117,11 +221,11 @@ class TestPipe:
 
         # First wrapped converter fails:
         with pytest.raises(ValueError):
-            c(33)
+            c.converter(33, None, None)
 
         # Last wrapped converter fails:
         with pytest.raises(ValueError):
-            c("33")
+            c.converter("33", None, None)
 
     def test_sugar(self):
         """
@@ -142,7 +246,30 @@ class TestPipe:
         """
         o = object()
 
-        assert o is pipe()(o)
+        assert o is pipe().converter(o, None, None)
+
+    def test_wrapped_annotation(self):
+        """
+        The return type of the wrapped converter is copied into its __call__
+        and ultimately into pipe's wrapped converter.
+        """
+
+        def last(value) -> bool:
+            return bool(value)
+
+        @attr.s
+        class C:
+            x = attr.ib(converter=[Converter(int), Converter(last)])
+
+        i = C(5)
+
+        assert True is i.x
+        assert (
+            bool
+            is _AnnotationExtractor(
+                attr.fields(C).x.converter.__call__
+            ).get_return_type()
+        )
 
 
 class TestToBool:

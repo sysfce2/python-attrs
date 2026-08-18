@@ -19,3 +19,5 @@ Whenever there is a need to break compatibility, it is announced in the changelo
 
 To report a security vulnerability, please use the [Tidelift security contact](https://tidelift.com/security).
 Tidelift will coordinate the fix and disclosure.
+
+If you submit AI slop, you will be permanently blocked.

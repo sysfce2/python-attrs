@@ -205,9 +205,9 @@ $ uv run tox run -e docs-doctests
           x: A very important argument.
 
           y:
-            Another very important argument, but its description is so long
-            that it doesn't fit on one line. So, we start the whole block on a
-            fresh new line to keep the block together.
+              Another very important argument, but its description is so long
+              that it doesn't fit on one line. So, we start the whole block on
+              a fresh new line to keep the block together.
 
       Returns:
           str: The result of doing something.
